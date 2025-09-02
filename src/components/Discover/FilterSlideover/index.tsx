@@ -37,13 +37,19 @@ const messages = defineMessages('components.Discover.FilterSlideover', {
   runtimeText: '{minValue}-{maxValue} minute runtime',
   ratingText: 'Ratings between {minValue} and {maxValue}',
   clearfilters: 'Clear Active Filters',
+  ratingProvider: 'Rating Platform',
   tmdbuserscore: 'TMDB User Score',
+  imdbuserscore: 'IMDb User Score',
+  rtcriticsscore: 'Rotten Tomatoes Tomatometer',
   tmdbuservotecount: 'TMDB User Vote Count',
   runtime: 'Runtime',
   streamingservices: 'Streaming Services',
   voteCount: 'Number of votes between {minValue} and {maxValue}',
   status: 'Status',
   certification: 'Content Rating',
+  tmdb: 'TMDB',
+  imdb: 'IMDb',
+  rottentomatoes: 'Rotten Tomatoes',
 });
 
 type FilterSlideoverProps = {
@@ -242,7 +248,32 @@ const FilterSlideover = ({
           />
         </div>
         <span className="text-lg font-semibold">
-          {intl.formatMessage(messages.tmdbuserscore)}
+          {intl.formatMessage(messages.ratingProvider)}
+        </span>
+        <select
+          className="rounded-md border border-gray-500 bg-gray-800 p-2"
+          value={currentFilters.ratingKey ?? 'tmdb'}
+          onChange={(e) =>
+            updateQueryParams(
+              'ratingKey',
+              e.target.value !== 'tmdb' ? e.target.value : undefined
+            )
+          }
+        >
+          <option value="tmdb">{intl.formatMessage(messages.tmdb)}</option>
+          <option value="imdb">{intl.formatMessage(messages.imdb)}</option>
+          <option value="rt">
+            {intl.formatMessage(messages.rottentomatoes)}
+          </option>
+        </select>
+        <span className="text-lg font-semibold">
+          {intl.formatMessage(
+            currentFilters.ratingKey === 'imdb'
+              ? messages.imdbuserscore
+              : currentFilters.ratingKey === 'rt'
+              ? messages.rtcriticsscore
+              : messages.tmdbuserscore
+          )}
         </span>
         <div className="relative z-0">
           <MultiRangeSlider

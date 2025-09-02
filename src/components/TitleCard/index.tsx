@@ -1,4 +1,8 @@
+import RTFresh from '@app/assets/rt_fresh.svg';
+import RTRotten from '@app/assets/rt_rotten.svg';
+import ImdbLogo from '@app/assets/services/imdb.svg';
 import Spinner from '@app/assets/spinner.svg';
+import TmdbLogo from '@app/assets/tmdb_logo.svg';
 import BlacklistModal from '@app/components/BlacklistModal';
 import Button from '@app/components/Common/Button';
 import CachedImage from '@app/components/Common/CachedImage';
@@ -20,15 +24,17 @@ import {
   MinusCircleIcon,
   StarIcon,
 } from '@heroicons/react/24/outline';
+import type { RatingResponse } from '@server/api/ratings';
 import { MediaStatus } from '@server/constants/media';
 import type { Watchlist } from '@server/entity/Watchlist';
 import type { MediaType } from '@server/models/Search';
 import axios from 'axios';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 import { Fragment, useCallback, useEffect, useRef, useState } from 'react';
 import { useIntl } from 'react-intl';
 import { useToasts } from 'react-toast-notifications';
-import { mutate } from 'swr';
+import useSWR, { mutate } from 'swr';
 
 interface TitleCardProps {
   id: number;
@@ -53,6 +59,9 @@ const messages = defineMessages('components.TitleCard', {
     '<strong>{title}</strong> Removed from watchlist  successfully!',
   watchlistCancel: 'watchlist for <strong>{title}</strong> canceled.',
   watchlistError: 'Something went wrong. Please try again.',
+  tmdbuserscore: 'TMDB User Score',
+  imdbuserscore: 'IMDB User Score – votes: {formattedCount}',
+  rtcriticsscore: 'Rotten Tomatoes Tomatometer',
 });
 
 const TitleCard = ({
@@ -61,6 +70,7 @@ const TitleCard = ({
   summary,
   year,
   title,
+  userScore,
   status,
   mediaType,
   isAddedToWatchlist = false,
@@ -81,6 +91,14 @@ const TitleCard = ({
   );
   const [showBlacklistModal, setShowBlacklistModal] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
+  const { query } = useRouter();
+  const ratingKey = (query.ratingKey as string) ?? 'tmdb';
+
+  const { data: ratingData } = useSWR<RatingResponse>(
+    showDetail && mediaType === 'movie' && ratingKey !== 'tmdb'
+      ? `/api/v1/movie/${id}/ratingscombined`
+      : null
+  );
 
   // Just to get the year from the date
   if (year) {
@@ -341,20 +359,70 @@ const TitleCard = ({
             fill
           />
           <div className="absolute left-0 right-0 flex items-center justify-between p-2">
-            <div
-              className={`pointer-events-none z-40 self-start rounded-full border bg-opacity-80 shadow-md ${
-                mediaType === 'movie' || mediaType === 'collection'
-                  ? 'border-blue-500 bg-blue-600'
-                  : 'border-purple-600 bg-purple-600'
-              }`}
-            >
-              <div className="flex h-4 items-center px-2 py-2 text-center text-xs font-medium uppercase tracking-wider text-white sm:h-5">
-                {mediaType === 'movie'
-                  ? intl.formatMessage(globalMessages.movie)
-                  : mediaType === 'collection'
-                  ? intl.formatMessage(globalMessages.collection)
-                  : intl.formatMessage(globalMessages.tvshow)}
+            <div className="flex items-center gap-2">
+              <div
+                className={`pointer-events-none z-40 self-start rounded-full border bg-opacity-80 shadow-md ${
+                  mediaType === 'movie' || mediaType === 'collection'
+                    ? 'border-blue-500 bg-blue-600'
+                    : 'border-purple-600 bg-purple-600'
+                }`}
+              >
+                <div className="flex h-4 items-center px-2 py-2 text-center text-xs font-medium uppercase tracking-wider text-white sm:h-5">
+                  {mediaType === 'movie'
+                    ? intl.formatMessage(globalMessages.movie)
+                    : mediaType === 'collection'
+                    ? intl.formatMessage(globalMessages.collection)
+                    : intl.formatMessage(globalMessages.tvshow)}
+                </div>
               </div>
+              {showDetail && (
+                <div className="flex items-center gap-2">
+                  {ratingKey === 'imdb' && ratingData?.imdb?.criticsScore && (
+                    <Tooltip
+                      content={intl.formatMessage(messages.imdbuserscore, {
+                        formattedCount: intl.formatNumber(
+                          ratingData.imdb.criticsScoreCount,
+                          {
+                            notation: 'compact',
+                            compactDisplay: 'short',
+                            maximumFractionDigits: 1,
+                          }
+                        ),
+                      })}
+                    >
+                      <div className="flex items-center rounded bg-gray-900/80 px-1 text-xs">
+                        <ImdbLogo className="mr-1 h-4 w-4" />
+                        <span>{ratingData.imdb.criticsScore}</span>
+                      </div>
+                    </Tooltip>
+                  )}
+                  {ratingKey === 'tmdb' && typeof userScore === 'number' && (
+                    <Tooltip
+                      content={intl.formatMessage(messages.tmdbuserscore)}
+                    >
+                      <div className="flex items-center rounded bg-gray-900/80 px-1 text-xs">
+                        <TmdbLogo className="mr-1 h-4 w-4" />
+                        <span>{Math.round(userScore * 10)}%</span>
+                      </div>
+                    </Tooltip>
+                  )}
+                  {ratingKey === 'rt' &&
+                    ratingData?.rt?.criticsScore !== undefined && (
+                      <Tooltip
+                        content={intl.formatMessage(messages.rtcriticsscore)}
+                      >
+                        <div className="flex items-center rounded bg-gray-900/80 px-1 text-xs">
+                          {ratingData.rt.criticsRating === 'Rotten' ? (
+                            <RTRotten className="mr-1 h-4 w-4" />
+                          ) : (
+                            <RTFresh className="mr-1 h-4 w-4" />
+                          )}
+                          <span>{ratingData.rt.criticsScore}%</span>
+                        </div>
+                      </Tooltip>
+                    )}
+                </div>
+              )}
             </div>
             {showDetail && currentStatus !== MediaStatus.BLACKLISTED && (
               <div className="flex flex-col gap-1">
