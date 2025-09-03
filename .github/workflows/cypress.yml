@@ -23,6 +23,7 @@ jobs:
         with:
           version: 9
       - name: Cypress run
+        id: cypress
         uses: cypress-io/github-action@v6
         with:
           build: pnpm cypress:build
@@ -37,7 +38,7 @@ jobs:
           COMMIT_INFO_MESSAGE: ${{github.event.pull_request.title}}
           COMMIT_INFO_SHA: ${{github.event.pull_request.head.sha}}
       - name: Upload video files
-        if: always()
+        if: ${{ always() && steps.cypress.outcome == 'failure' }}
         uses: actions/upload-artifact@v4
         with:
           name: cypress-videos

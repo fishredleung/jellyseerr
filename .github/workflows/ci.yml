@@ -62,7 +62,15 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      - name: Check Docker Hub credentials
+        id: dhcreds
+        run: |
+          if [ -n "${{ secrets.DOCKER_USERNAME }}" ] && [ -n "${{ secrets.DOCKER_TOKEN }}" ]; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Log in to Docker Hub
+        if: steps.dhcreds.outputs.present == 'true'
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
@@ -75,13 +83,26 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Prepare image list
+        id: images
+        run: |
+          images="ghcr.io/${OWNER_LC}/jellyseerr"
+          if [ "${{ steps.dhcreds.outputs.present }}" = "true" ]; then
+            images="${OWNER_LC}/jellyseerr\n${images}"
+          fi
+          {
+            echo "list<<EOF"
+            echo -e "$images"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+        env:
+          OWNER_LC: ${{ env.OWNER_LC }}
+
       - name: Docker metadata
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: |
-            fishredleung/jellyseerr
-            ghcr.io/${{ env.OWNER_LC }}/jellyseerr
+          images: ${{ steps.images.outputs.list }}
           tags: |
             type=raw,value=develop
             type=sha,format=short
@@ -126,3 +147,4 @@ jobs:
           status: ${{ steps.status.outputs.status }}
           title: ${{ github.workflow }}
           nofail: true
+          ack_no_webhook: true

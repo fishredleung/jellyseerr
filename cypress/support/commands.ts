@@ -32,3 +32,15 @@ Cypress.Commands.add('loginAsAdmin', () => {
 Cypress.Commands.add('loginAsUser', () => {
   cy.login(Cypress.env('USER_EMAIL'), Cypress.env('USER_PASSWORD'));
 });
+
+Cypress.Commands.add('closeOverlay', () => {
+  cy.get('body').then(($body) => {
+    const overlay = $body.find('div.fixed.top-0.bottom-0.left-0.right-0.z-50');
+    if (overlay.length) {
+      cy.wrap(overlay).click({ force: true });
+    }
+  });
+  cy.get('body')
+    .find('div.fixed.top-0.bottom-0.left-0.right-0.z-50')
+    .should('not.exist');
+});

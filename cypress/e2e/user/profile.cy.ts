@@ -7,6 +7,7 @@ describe('User Profile', () => {
     cy.visit('/');
 
     cy.get('[data-testid=user-menu]').click();
+    cy.closeOverlay();
     cy.get('[data-testid=user-menu-profile]').click();
 
     cy.get('h1').should('contain', Cypress.env('ADMIN_EMAIL'));
