@@ -63,7 +63,7 @@ const ExternalLinkBlock = ({
       )}
       {tvdbId && mediaType === MediaType.TV && (
         <a
-          href={`http://www.thetvdb.com/?tab=series&id=${tvdbId}`}
+          href={`https://thetvdb.com/?tab=series&id=${tvdbId}`}
           className="w-9 opacity-50 transition duration-300 hover:opacity-100"
           target="_blank"
           rel="noreferrer"
