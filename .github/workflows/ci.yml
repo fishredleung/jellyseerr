@@ -125,6 +125,7 @@ jobs:
         uses: sarisia/actions-status-discord@v1
         with:
           webhook: ${{ secrets.DISCORD_WEBHOOK }}
+          ack_no_webhook: true  
           status: ${{ steps.status.outputs.status }}
           title: ${{ github.workflow }}
           nofail: true
