@@ -23,6 +23,7 @@ describe('General Settings', () => {
     );
 
     cy.get('[data-testid=modal-ok-button]').click();
+    cy.closeOverlay();
     cy.get('[data-testid=modal-title]').should('not.exist');
 
     cy.get('[type=checkbox]#trustProxy').click();

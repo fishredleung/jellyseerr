@@ -95,7 +95,7 @@ const TitleCard = ({
   const ratingKey = (query.ratingKey as string) ?? 'tmdb';
 
   const { data: ratingData } = useSWR<RatingResponse>(
-    showDetail && mediaType === 'movie' && ratingKey !== 'tmdb'
+    mediaType === 'movie' && ratingKey !== 'tmdb'
       ? `/api/v1/movie/${id}/ratingscombined`
       : null
   );
@@ -375,54 +375,50 @@ const TitleCard = ({
                     : intl.formatMessage(globalMessages.tvshow)}
                 </div>
               </div>
-              {showDetail && (
-                <div className="flex items-center gap-2">
-                  {ratingKey === 'imdb' && ratingData?.imdb?.criticsScore && (
+              <div className="flex items-center gap-2">
+                {ratingKey === 'imdb' && ratingData?.imdb?.criticsScore && (
+                  <Tooltip
+                    content={intl.formatMessage(messages.imdbuserscore, {
+                      formattedCount: intl.formatNumber(
+                        ratingData.imdb.criticsScoreCount,
+                        {
+                          notation: 'compact',
+                          compactDisplay: 'short',
+                          maximumFractionDigits: 1,
+                        }
+                      ),
+                    })}
+                  >
+                    <div className="flex items-center rounded bg-gray-900/80 px-1 text-xs">
+                      <ImdbLogo className="mr-1 h-4 w-4" />
+                      <span>{ratingData.imdb.criticsScore}</span>
+                    </div>
+                  </Tooltip>
+                )}
+                {ratingKey === 'tmdb' && typeof userScore === 'number' && (
+                  <Tooltip content={intl.formatMessage(messages.tmdbuserscore)}>
+                    <div className="flex items-center rounded bg-gray-900/80 px-1 text-xs">
+                      <TmdbLogo className="mr-1 h-4 w-4" />
+                      <span>{Math.round(userScore * 10)}%</span>
+                    </div>
+                  </Tooltip>
+                )}
+                {ratingKey === 'rt' &&
+                  ratingData?.rt?.criticsScore !== undefined && (
                     <Tooltip
-                      content={intl.formatMessage(messages.imdbuserscore, {
-                        formattedCount: intl.formatNumber(
-                          ratingData.imdb.criticsScoreCount,
-                          {
-                            notation: 'compact',
-                            compactDisplay: 'short',
-                            maximumFractionDigits: 1,
-                          }
-                        ),
-                      })}
+                      content={intl.formatMessage(messages.rtcriticsscore)}
                     >
                       <div className="flex items-center rounded bg-gray-900/80 px-1 text-xs">
-                        <ImdbLogo className="mr-1 h-4 w-4" />
-                        <span>{ratingData.imdb.criticsScore}</span>
+                        {ratingData.rt.criticsRating === 'Rotten' ? (
+                          <RTRotten className="mr-1 h-4 w-4" />
+                        ) : (
+                          <RTFresh className="mr-1 h-4 w-4" />
+                        )}
+                        <span>{ratingData.rt.criticsScore}%</span>
                       </div>
                     </Tooltip>
                   )}
-                  {ratingKey === 'tmdb' && typeof userScore === 'number' && (
-                    <Tooltip
-                      content={intl.formatMessage(messages.tmdbuserscore)}
-                    >
-                      <div className="flex items-center rounded bg-gray-900/80 px-1 text-xs">
-                        <TmdbLogo className="mr-1 h-4 w-4" />
-                        <span>{Math.round(userScore * 10)}%</span>
-                      </div>
-                    </Tooltip>
-                  )}
-                  {ratingKey === 'rt' &&
-                    ratingData?.rt?.criticsScore !== undefined && (
-                      <Tooltip
-                        content={intl.formatMessage(messages.rtcriticsscore)}
-                      >
-                        <div className="flex items-center rounded bg-gray-900/80 px-1 text-xs">
-                          {ratingData.rt.criticsRating === 'Rotten' ? (
-                            <RTRotten className="mr-1 h-4 w-4" />
-                          ) : (
-                            <RTFresh className="mr-1 h-4 w-4" />
-                          )}
-                          <span>{ratingData.rt.criticsScore}%</span>
-                        </div>
-                      </Tooltip>
-                    )}
-                </div>
-              )}
+              </div>
             </div>
             {showDetail && currentStatus !== MediaStatus.BLACKLISTED && (
               <div className="flex flex-col gap-1">
