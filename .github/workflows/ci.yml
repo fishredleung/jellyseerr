@@ -45,6 +45,7 @@ jobs:
 
   build:
     name: Build & Publish (multi-arch)
+    environment: develop   # <-- uses environment secrets from the 'develop' environment
     if: github.ref == 'refs/heads/develop' && !contains(github.event.head_commit.message, '[skip ci]')
     runs-on: ubuntu-24.04
     steps:
@@ -105,6 +106,7 @@ jobs:
 
   discord:
     name: Send Discord Notification
+    environment: develop   # <-- only needed if DISCORD_WEBHOOK is an environment secret
     needs: build
     if: always() && github.event_name != 'pull_request' && !contains(github.event.head_commit.message, '[skip ci]')
     runs-on: ubuntu-24.04
